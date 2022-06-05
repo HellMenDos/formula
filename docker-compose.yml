@@ -1,0 +1,61 @@
+version: "3.2"
+
+services:
+    nginx:
+        build:
+          context: ./nginx
+        volumes:
+          - media_volume:/app/media
+        ports:
+          - 80:8000
+        depends_on:
+          - backend
+        networks:
+          - formula-network
+
+    backend:
+        build:
+            context: ./backend
+        environment:
+          - TYPEORM_CONNECTION=postgres
+          - TYPEORM_HOST=db
+          - TYPEORM_USERNAME=app
+          - TYPEORM_PASSWORD=example
+          - TYPEORM_DATABASE=app
+          - TYPEORM_PORT=5432
+          - TYPEORM_SYNCHRONIZE=false
+          - TYPEORM_LOGGING=true
+          - TYPEORM_ENTITIES=dist/**/*entity.js
+          - TYPEORM_MIGRATIONS=dist/migrations/*.js
+          - TYPEORM_MIGRATIONS_DIR=src/migrations
+          - TYPEORM_MIGRATIONS_TABLE_NAME=migrations
+        depends_on:
+            - db
+        networks:
+            - formula-network
+        volumes:
+          - ./backend:/app
+          - media_volume:/app/photos
+
+
+    db:
+        image: postgres:12.0-alpine
+        volumes:
+            - postgres_volume:/var/lib/postgresql/data/
+        environment:
+            - POSTGRES_USER=app
+            - POSTGRES_PASSWORD=example
+            - POSTGRES_DB=app
+        networks:
+            - formula-network
+        ports:
+            - '5432:5432'
+    
+      
+volumes:
+  postgres_volume:
+  static_volume:
+  media_volume:
+
+networks:
+    formula-network:
